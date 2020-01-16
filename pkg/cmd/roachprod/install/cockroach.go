@@ -122,7 +122,7 @@ func (r Cockroach) Start(c *SyncedCluster, extraArgs []string) {
 		}
 	}
 
-	if c.Secure && bootstrapped {
+	if !c.Insecure && bootstrapped {
 		c.DistributeCerts()
 	}
 
@@ -179,10 +179,10 @@ func (r Cockroach) Start(c *SyncedCluster, extraArgs []string) {
 		port := r.NodePort(c, nodes[i])
 
 		var args []string
-		if c.Secure {
-			args = append(args, "--certs-dir="+c.Impl.CertsDir(c, nodes[i]))
-		} else {
+		if c.Insecure {
 			args = append(args, "--insecure")
+		} else {
+			args = append(args, "--certs-dir="+c.Impl.CertsDir(c, nodes[i]))
 		}
 		dir := c.Impl.NodeDir(c, nodes[i])
 		logDir := c.Impl.LogDir(c, nodes[i])
@@ -366,11 +366,11 @@ func (Cockroach) CertsDir(c *SyncedCluster, index int) string {
 // NodeURL implements the ClusterImpl.NodeDir interface.
 func (Cockroach) NodeURL(c *SyncedCluster, host string, port int) string {
 	url := fmt.Sprintf("'postgres://root@%s:%d", host, port)
-	if c.Secure {
-		url += "?sslcert=certs%2Fnode.crt&sslkey=certs%2Fnode.key&" +
-			"sslrootcert=certs%2Fca.crt&sslmode=verify-full"
-	} else {
+	if c.Insecure {
 		url += "?sslmode=disable"
+	} else {
+		url += "?sslcert=certs%2Fclient.root.crt&sslkey=certs%2Fclient.root.key&" +
+			"sslrootcert=certs%2Fca.crt&sslmode=verify-full"
 	}
 	url += "'"
 	return url

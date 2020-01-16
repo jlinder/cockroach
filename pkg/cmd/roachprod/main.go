@@ -78,7 +78,7 @@ var (
 	listJSON          bool
 	listMine          bool
 	clusterType       = "cockroach"
-	secure            = false
+	insecure          = false
 	nodeEnv           = "COCKROACH_ENABLE_RPC_COMPRESSION=false"
 	nodeArgs          []string
 	tag               string
@@ -177,7 +177,7 @@ Hint: use "roachprod sync" to update the list of available clusters.
 		}
 	}
 	c.Nodes = nodes
-	c.Secure = secure
+	c.Insecure = insecure
 	c.Env = nodeEnv
 	c.Args = nodeArgs
 	if tag != "" {
@@ -957,10 +957,11 @@ var startCmd = &cobra.Command{
 	Short: "start nodes on a cluster",
 	Long: `Start nodes on a cluster.
 
-The --secure flag can be used to start nodes in secure mode (i.e. using
-certs). When specified, there is a one time initialization for the cluster to
-create and distribute the certs. Note that running some modes in secure mode
-and others in insecure mode is not a supported Cockroach configuration.
+The --insecure flag can be used to start nodes in insecure mode (i.e. without
+using certs). When it is specified, the one time initialization for the
+cluster to create and distribute the certs is skipped. Note that running some
+nodes in insecure mode and others in secure mode is not a supported Cockroach
+configuration.
 
 As a debugging aid, the --sequential flag starts the nodes sequentially so node
 IDs match hostnames. Otherwise nodes are started are parallel.
@@ -1455,9 +1456,9 @@ var adminurlCmd = &cobra.Command{
 				host = c.VMs[node-1]
 			}
 			port := install.GetAdminUIPort(c.Impl.NodePort(c, node))
-			scheme := "http"
-			if c.Secure {
-				scheme = "https"
+			scheme := "https"
+			if c.Insecure {
+				scheme = "http"
 			}
 			if !strings.HasPrefix(adminurlPath, "/") {
 				adminurlPath = "/" + adminurlPath
@@ -1647,7 +1648,7 @@ func main() {
 		&external, "external", false, "return external IP addresses")
 
 	runCmd.Flags().BoolVar(
-		&secure, "secure", false, "use a secure cluster")
+		&insecure, "insecure", false, "use an insecure cluster")
 
 	startCmd.Flags().IntVarP(&numRacks,
 		"racks", "r", 0, "the number of racks to partition the nodes into")
@@ -1729,7 +1730,7 @@ func main() {
 			fallthrough
 		case pgurlCmd, adminurlCmd:
 			cmd.Flags().BoolVar(
-				&secure, "secure", false, "use a secure cluster")
+				&insecure, "insecure", false, "use an insecure cluster")
 		}
 
 		if cmd.Long == "" {
