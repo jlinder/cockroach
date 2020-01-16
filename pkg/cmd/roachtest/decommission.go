@@ -170,13 +170,14 @@ func runDecommission(t *test, c *cluster, nodes int, duration time.Duration) {
 		stop := func(node int) error {
 			port := fmt.Sprintf("{pgport:%d}", node)
 			defer time.Sleep(time.Second) // work around quit returning too early
-			return c.RunE(ctx, c.Node(node), "./cockroach quit --insecure --host=:"+port)
+			return c.RunE(ctx, c.Node(node), "./cockroach quit "+cockroachSqlSecureFlags()+" --host=:"+port)
 		}
 
 		decom := func(id string) error {
 			port := fmt.Sprintf("{pgport:%d}", nodes) // always use last node
 			t.Status("decommissioning node", id)
-			return c.RunE(ctx, c.Node(nodes), "./cockroach node decommission --insecure --wait=live --host=:"+port+" "+id)
+			return c.RunE(ctx, c.Node(nodes),
+				"./cockroach node decommission "+cockroachSqlSecureFlags()+" --wait=live --host=:"+port+" "+id)
 		}
 
 		for tBegin, whileDown, node := timeutil.Now(), true, 1; timeutil.Since(tBegin) <= duration; whileDown, node = !whileDown, (node%numDecom)+1 {
@@ -255,7 +256,9 @@ func execCLI(
 ) (string, error) {
 	args := []string{"./cockroach"}
 	args = append(args, extraArgs...)
-	args = append(args, "--insecure")
+	if insecure {
+		args = append(args, "--insecure")
+	}
 	args = append(args, fmt.Sprintf("--port={pgport:%d}", runNode))
 	buf, err := c.RunWithBuffer(ctx, t.l, c.Node(runNode), args...)
 	t.l.Printf("%s\n", buf)

@@ -206,7 +206,8 @@ func registerKVContention(r *testRegistry) {
 			// Enable request tracing, which is a good tool for understanding
 			// how different transactions are interacting.
 			c.Run(ctx, c.Node(1),
-				`./cockroach sql --insecure -e "SET CLUSTER SETTING trace.debug.enable = true"`)
+				`./cockroach sql `+cockroachSqlSecureFlags()+
+				` -e "SET CLUSTER SETTING trace.debug.enable = true"`)
 
 			t.Status("running workload")
 			m := newMonitor(ctx, c, c.Range(1, nodes))
@@ -304,7 +305,8 @@ func registerKVQuiescenceDead(r *testRegistry) {
 				run(kv+" --seed 1 {pgurl:1}", true)
 			})
 			// Gracefully shut down third node (doesn't matter whether it's graceful or not).
-			c.Run(ctx, c.Node(nodes), "./cockroach quit --insecure --host=:{pgport:3}")
+			c.Run(ctx, c.Node(nodes),
+				"./cockroach quit "+cockroachSqlSecureFlags()+" --host=:{pgport:3}")
 			c.Stop(ctx, c.Node(nodes))
 			// Measure qps with node down (i.e. without quiescence).
 			qpsOneDown := qps(func() {
@@ -370,7 +372,8 @@ func registerKVGracefulDraining(r *testRegistry) {
 						return nil
 					case <-time.After(1 * time.Minute):
 					}
-					c.Run(ctx, c.Node(nodes), "./cockroach quit --insecure --host=:{pgport:3}")
+					c.Run(ctx, c.Node(nodes),
+						"./cockroach quit "+cockroachSqlSecureFlags()+" --host=:{pgport:3}")
 					c.Stop(ctx, c.Node(nodes))
 					select {
 					case <-ctx.Done():

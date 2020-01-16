@@ -700,7 +700,8 @@ func runTPCCBench(ctx context.Context, t *test, c *cluster, b tpccBenchSpec) {
 			if err := c.Install(ctx, t.l, loadNodes, "haproxy"); err != nil {
 				t.Fatal(err)
 			}
-			c.Run(ctx, loadNodes, "./cockroach gen haproxy --insecure --url {pgurl:1}")
+			c.Run(ctx, loadNodes,
+				"./cockroach gen haproxy "+cockroachSqlSecureFlags()+" --url {pgurl:1}")
 			// Increase the maximum connection limit to ensure that no TPC-C
 			// load gen workers get stuck during connection initialization.
 			// 10k warehouses requires at least 20,000 connections, so add a

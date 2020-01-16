@@ -50,6 +50,7 @@ var (
 	cockroach   string
 	cloud                    = "gce"
 	encrypt     encryptValue = "false"
+	insecure    bool
 	workload    string
 	roachprod   string
 	buildTag    string
@@ -628,6 +629,13 @@ func (s clusterSpec) String() string {
 	return str
 }
 
+func cockroachSqlSecureFlags() string {
+	if insecure {
+		return "--insecure"
+	}
+	return "--certs-dir certs"
+}
+
 func firstZone(zones string) string {
 	return strings.SplitN(zones, ",", 2)[0]
 }
@@ -1104,7 +1112,7 @@ func (c *cluster) StopCockroachGracefullyOnNode(ctx context.Context, node int) e
 	// Note that the following command line needs to run against both v2.1
 	// and the current branch. Do not change it in a manner that is
 	// incompatible with 2.1.
-	if err := c.RunE(ctx, c.Node(node), "./cockroach quit --insecure --port="+port); err != nil {
+	if err := c.RunE(ctx, c.Node(node), "./cockroach quit "+cockroachSqlSecureFlags()+" --port="+port); err != nil {
 		return err
 	}
 	// TODO (rohany): This comment below might be out of date.

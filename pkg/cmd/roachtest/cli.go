@@ -39,7 +39,7 @@ func runCLINodeStatus(ctx context.Context, t *test, c *cluster) {
 
 	nodeStatus := func() (raw string, _ []string) {
 		out, err := c.RunWithBuffer(ctx, t.l, c.Node(1),
-			"./cockroach node status --insecure -p {pgport:1}")
+			"./cockroach node status "+cockroachSqlSecureFlags()+" -p {pgport:1}")
 		if err != nil {
 			t.Fatalf("%v\n%s", err, out)
 		}

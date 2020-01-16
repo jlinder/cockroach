@@ -50,7 +50,8 @@ func registerNIndexes(r *testRegistry, secondaryIndexes int) {
 						                       CONFIGURE ZONE USING
 						                       constraints = COPY FROM PARENT,
 						                       lease_preferences = '[[+zone=%s]]'`, firstAZ)
-					c.Run(ctx, c.Node(1), `./cockroach sql --insecure -e "`+leasePrefs+`"`)
+					c.Run(ctx, c.Node(1),
+						`./cockroach sql `+cockroachSqlSecureFlags()+` -e "`+leasePrefs+`"`)
 				}
 
 				payload := " --payload=256"

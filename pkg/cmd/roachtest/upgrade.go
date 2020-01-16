@@ -84,7 +84,7 @@ func registerUpgrade(r *testRegistry) {
 			// Note that the following command line needs to run against both v2.1
 			// and the current branch. Do not change it in a manner that is
 			// incompatible with 2.1.
-			if err := c.RunE(ctx, c.Node(node), "./cockroach quit --decommission --insecure --port="+port); err != nil {
+			if err := c.RunE(ctx, c.Node(node), "./cockroach quit --decommission "+cockroachSqlSecureFlags()+" --port="+port); err != nil {
 				return err
 			}
 			t.WorkerStatus("stop")
