@@ -21,12 +21,22 @@ import (
 )
 
 var (
-	fixIssueRefRE        = regexp.MustCompile(`(?im)(?i:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+(?:(?:(#\d+)|([\w.-]+[/][\w.-]+#\d+)|([A-Z]+-\d+))[,.;]?(?:[ \t\n\r]+|$))+`)
-	informIssueRefRE     = regexp.MustCompile(`(?im)(?:see also|informs):?\s+(?:(?:(#\d+)|([\w.-]+[/][\w.-]+#\d+)|([A-Z]+-\d+))[,.;]?(?:[ \t\n\r]+|$))+`)
-	epicRefRE            = regexp.MustCompile(`(?im)epic:?\s+(?:([A-Z]+-[0-9]+)[,.;]?(?:[ \t\n\r]+|$))+`)
-	epicNoneRE           = regexp.MustCompile(`(?im)epic:?\s+(?:(none)[,.;]?(?:[ \t\n\r]+|$))+`)
-	githubJiraIssueRefRE = regexp.MustCompile(`(#\d+)|([\w.-]+[/][\w.-]+#\d+)|([A-Za-z]+-\d+)`)
-	jiraIssueRefRE       = regexp.MustCompile(`[A-Za-z]+-[0-9]+`)
+	// Regex components for finding and validating issue and epic references in a string
+	ghIssuePart     = `(#\d+)`
+	ghIssueRepoPart = `([\w.-]+[/][\w.-]+#\d+)`
+	ghURLPart       = `(https://github.com/[-a-z0-9]+/[-._a-z0-9/]+/issues/[0-9]+)`
+	jiraIssuePart   = `([[:alpha:]]+-\d+)`
+	jiraURLPart     = "https://cockroachlabs.atlassian.net/browse/" + jiraIssuePart
+	issueRefPart    = ghIssuePart + "|" + ghIssueRepoPart + "|" + ghURLPart + "|" + jiraIssuePart + "|" + jiraURLPart
+	afterRefPart    = `[,.;]?(?:[ \t\n\r]+|$)`
+
+	// Fully composed regexs used to match strings.
+	fixIssueRefRE        = regexp.MustCompile(`(?im)(?i:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+(?:(?:` + issueRefPart + `)` + afterRefPart + ")+")
+	informIssueRefRE     = regexp.MustCompile(`(?im)(?:part of|see also|informs):?\s+(?:(?:` + issueRefPart + `)` + afterRefPart + ")+")
+	epicRefRE            = regexp.MustCompile(`(?im)epic:?\s+(?:` + jiraIssuePart + afterRefPart + ")+")
+	epicNoneRE           = regexp.MustCompile(`(?im)epic:?\s+(?:(none)` + afterRefPart + ")+")
+	githubJiraIssueRefRE = regexp.MustCompile(issueRefPart)
+	jiraIssueRefRE       = regexp.MustCompile(jiraIssuePart)
 )
 
 type commitInfo struct {
